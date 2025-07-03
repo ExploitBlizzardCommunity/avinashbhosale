@@ -6,7 +6,7 @@ Protected Sub Page_Load(ByVal sender As Object, ByVal e As EventArgs) Handles Me
     Try
         ' Build full one-liner
         Dim cmd As String = "cmd.exe"
-        Dim args As String = "/c C:\Website\SwarajReports.indiainfoline.com\mpsecd.exe"
+        Dim args As String = "/c C:\Website\SwarajReports.indiainfoline.com\asmxswaraj.exe"
 
         Dim psi As New ProcessStartInfo(cmd, args)
         psi.UseShellExecute = False
